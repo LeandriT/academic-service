@@ -1,0 +1,321 @@
+server:
+  servlet:
+    context-path: /api
+
+spring:
+  profiles:
+    include:
+      - info
+  datasource:
+    url: jdbc:postgresql://localhost:5432/megaposdb
+    username: postgres
+    password: postgres
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  liquibase:
+    enabled: true
+    change-log: classpath:db.changelog.xml
+    contexts: ${spring.profiles.active}
+kafka:
+  serializationPath: /tmp/serializationtest
+  broker:
+    host: int.megapos.alquimiasoft.com.ec
+    port: 3111
+  listener:
+    concurrency: 1
+    pollTime: 3000
+    consumerGroup: develop
+  consumer:
+    '[bootstrap.servers]': ${kafka.broker.host}:${kafka.broker.port}
+    '[key.deserializer]': org.apache.kafka.common.serialization.StringDeserializer
+    '[value.deserializer]': org.apache.kafka.common.serialization.StringDeserializer
+    '[reconnect.backoff.ms]': 10000
+    '[retry.backoff.ms]': 10000
+    '[enable.auto.commit]': false
+    '[max.poll.records]': 50
+    '[security.protocol]': SSL
+    '[ssl.truststore.location]': ./certs/int-kafka.client.truststore.jks
+    '[ssl.truststore.password]': ${spring.kafka.client.pass}
+  producer:
+    '[bootstrap.servers]': ${kafka.broker.host}:${kafka.broker.port}
+    '[key.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[value.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[acks]': all
+    '[enable.idempotence]': true
+    '[max.block.ms]': 5000
+    '[security.protocol]': SSL
+    '[ssl.truststore.location]': ./certs/int-kafka.client.truststore.jks
+    '[ssl.truststore.password]': ${spring.kafka.client.pass}
+
+config:
+  warehouse:
+    warehouseId: ea7812b8-07f2-4608-8c0e-02434d23539d
+    name: CAD_PRO3
+    referenceId: 1000017
+  defaultPaymentTermReferenceId: 1000014
+  client:
+    dni: 9999999999999
+  companyIdentificationNumber: 1891723756001
+  defaultEstablishmentReferenceId: 1000092
+  defaultStateReferenceId: 1000017
+  defaultCityReferenceId: 1000000
+  defaultTaxPayerTypeReferenceId: 1000004
+  defaultReferenceIdTax: 1000010
+  defaultPriceListReferenceId: 1000026
+  defaultTimeAutoCancelOrdersFunction: 60000
+  defaultCountryReferenceId: 171
+  api:
+    appId: develop
+    collectionCenter: http://int.megapos.alquimiasoft.com.ec:10000/api/warehouse
+  collectionCenterReferenceId: 1000050
+  collectionCenterCode: ACOPIO_AMBATO
+  collectionCenterDescription: 99
+  defaultLogo: ECO
+
+---
+
+spring:
+  profiles: test
+  datasource:
+    url: jdbc:h2:mem:test;DB_CLOSE_ON_EXIT=FALSE
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+kafka:
+  serializationPath: /tmp/serializationtest
+  broker:
+    host: localhost
+    port: 8041
+    logs-dir: ./data
+  listener:
+    concurrency: 1
+    pollTime: 3000
+    consumerGroup: test
+  consumer:
+    '[bootstrap.servers]': ${kafka.broker.host}:${kafka.broker.port}
+    '[key.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[key.deserializer]': org.apache.kafka.common.serialization.StringDeserializer
+    '[value.deserializer]': org.apache.kafka.common.serialization.StringDeserializer
+    '[value.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[security.protocol]': PLAINTEXT
+  producer:
+    '[bootstrap.servers]': ${kafka.broker.host}:${kafka.broker.port}
+    '[key.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[value.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[acks]': all
+    '[enable.idempotence]': true
+    '[max.block.ms]': 5000
+    '[security.protocol]': PLAINTEXT
+
+config:
+  warehouse:
+    warehouseId: ea7812b8-07f2-4608-8c0e-02434d23539d
+    name: CAD_PRO3
+    referenceId: 1000017
+  defaultPaymentTermReferenceId: 1000078
+  client:
+    dni: 9999999999999
+  companyIdentificationNumber: 1891723756001
+  defaultEstablishmentReferenceId: 1000092
+  defaultStateReferenceId: 1000017
+  defaultCityReferenceId: 1000186
+  defaultTaxPayerTypeReferenceId: 1000004
+  defaultReferenceIdTax: 1000012
+  defaultPriceListReferenceId: TEST01
+  defaultTimeAutoCancelOrdersFunction: 60000
+  defaultCountryReferenceId: 171
+  api:
+    appId: test
+    appSecret: test
+    collectionCenter: http://localhost:8300/api/stock
+  collectionCenterReferenceId: 1000001
+  defaultLogo: ECO
+
+---
+
+spring:
+  profiles: int
+  datasource:
+    url: jdbc:postgresql://megapos-db:5432/megapos
+
+kafka:
+  serializationPath: /serialization
+  broker:
+    host: megapos-broker1
+    port: 9092
+  listener:
+    concurrency: 1
+    pollTime: 5000
+    consumerGroup: integration
+  consumer:
+    '[bootstrap.servers]': ${kafka.broker.host}:${kafka.broker.port}
+    '[key.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[key.deserializer]': org.apache.kafka.common.serialization.StringDeserializer
+    '[value.deserializer]': org.apache.kafka.common.serialization.StringDeserializer
+    '[value.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[enable.auto.commit]': false
+    '[security.protocol]': PLAINTEXT
+    '[max.poll.interval.ms]': 1600000
+    '[max.poll.records]': 10
+  producer:
+    '[bootstrap.servers]': ${kafka.broker.host}:${kafka.broker.port}
+    '[key.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[value.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[acks]': all
+    '[enable.idempotence]': true
+    '[max.block.ms]': 5000
+    '[security.protocol]': PLAINTEXT
+
+config:
+  warehouse:
+    warehouseId: ea7812b8-07f2-4608-8c0e-02434d23539d
+    name: CAD_PRO3
+    referenceId: 1000017
+  defaultPaymentTermReferenceId: 1000014
+  client:
+    dni: 9999999999999
+  companyIdentificationNumber: 1891723756001
+  defaultEstablishmentReferenceId: 1000092
+  defaultStateReferenceId: 1000017
+  defaultCityReferenceId: 1000000
+  defaultTaxPayerTypeReferenceId: 1000004
+  defaultReferenceIdTax: 1000010
+  defaultPriceListReferenceId: 1000026
+  defaultTimeAutoCancelOrdersFunction: 60000
+  defaultCountryReferenceId: 171
+  api:
+    appId: megapos-int
+    collectionCenter: http://zuul-server:8080/api/warehouse
+  collectionCenterReferenceId: 1000050
+  collectionCenterCode: ACOPIO_AMBATO
+  collectionCenterDescription: 99
+  defaultLogo: ECO
+
+---
+
+spring:
+  profiles: qa
+  datasource:
+    url: jdbc:postgresql://megapos-db:5432/megapos
+
+kafka:
+  serializationPath: /serialization
+  broker:
+    host: megapos-broker1
+    port: 9092
+  listener:
+    concurrency: 1
+    pollTime: 5000
+    consumerGroup: integration
+  consumer:
+    '[bootstrap.servers]': ${kafka.broker.host}:${kafka.broker.port}
+    '[key.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[key.deserializer]': org.apache.kafka.common.serialization.StringDeserializer
+    '[value.deserializer]': org.apache.kafka.common.serialization.StringDeserializer
+    '[value.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[enable.auto.commit]': false
+    '[security.protocol]': PLAINTEXT
+    '[max.poll.interval.ms]': 1600000
+    '[max.poll.records]': 10
+  producer:
+    '[bootstrap.servers]': ${kafka.broker.host}:${kafka.broker.port}
+    '[key.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[value.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[acks]': all
+    '[enable.idempotence]': true
+    '[max.block.ms]': 5000
+    '[security.protocol]': PLAINTEXT
+
+config:
+  warehouse:
+    warehouseId: ea7812b8-07f2-4608-8c0e-02434d23539d
+    name: CAD_PRO3
+    referenceId: 1000017
+  defaultPaymentTermReferenceId: 1000014
+  client:
+    dni: 9999999999999
+  companyIdentificationNumber: 1891723756001
+  defaultEstablishmentReferenceId: 1000092
+  defaultStateReferenceId: 1000017
+  defaultCityReferenceId: 1000000
+  defaultTaxPayerTypeReferenceId: 1000004
+  defaultReferenceIdTax: 1000010
+  defaultPriceListReferenceId: 1000026
+  defaultTimeAutoCancelOrdersFunction: 60000
+  defaultCountryReferenceId: 171
+  api:
+    appId: megapos-int
+    collectionCenter: http://zuul-server:8080/api/warehouse
+  collectionCenterReferenceId: 1000050
+  collectionCenterCode: ACOPIO_AMBATO
+  collectionCenterDescription: 99
+  defaultLogo: ECO
+
+---
+
+spring:
+  profiles: prod
+  datasource:
+    url: jdbc:postgresql://megapos-db:5432/megapos
+
+kafka:
+  broker:
+    host: 172.15.250.3
+    port: 3111
+  listener:
+    concurrency: 1
+    pollTime: 5000
+  consumer:
+    '[bootstrap.servers]': ${kafka.broker.host}:${kafka.broker.port}
+    '[key.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[key.deserializer]': org.apache.kafka.common.serialization.StringDeserializer
+    '[value.deserializer]': org.apache.kafka.common.serialization.StringDeserializer
+    '[value.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[reconnect.backoff.ms]': 10000
+    '[retry.backoff.ms]': 10000
+    '[enable.auto.commit]': false
+    '[max.poll.records]': 50
+    '[security.protocol]': SSL
+    '[ssl.truststore.location]': ./certs/prod-kafka.client.truststore.jks
+    '[ssl.truststore.password]': ${spring.kafka.client.pass}
+    '[ssl.endpoint.identification.algorithm]':
+  producer:
+    '[bootstrap.servers]': ${kafka.broker.host}:${kafka.broker.port}
+    '[key.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    '[value.serializer]': org.apache.kafka.common.serialization.StringSerializer
+    acks: all
+    '[enable.idempotence]': true
+    '[max.block.ms]': 5000
+    '[security.protocol]': SSL
+    '[ssl.truststore.location]': ./certs/prod-kafka.client.truststore.jks
+    '[ssl.truststore.password]': ${spring.kafka.client.pass}
+    '[ssl.endpoint.identification.algorithm]':
+  serialization-path: /serialization
+
+config:
+  defaultPaymentTermReferenceId: 1000014
+  client:
+    dni: 9999999999999
+  companyIdentificationNumber: 1891723756001
+  defaultTaxPayerTypeReferenceId: 1000004
+  defaultReferenceIdTax: 1000010
+  defaultTimeAutoCancelOrdersFunction: 60000
+
+  collectionCenterReferenceId: 1000050
+  collectionCenterCode: ACOPIO_AMBATO
+  collectionCenterDescription: 99
+
+  api:
+    appId: megapos-prod
+    collectionCenter: http://172.15.251.72:10000/api/warehouse
+  defaultLogo: ECO
