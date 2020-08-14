@@ -1,0 +1,121 @@
+plugins {
+    id 'jacoco'
+    id 'java'
+    id "org.sonarqube" version "3.0"
+    id 'info.solidsoft.pitest' version '1.5.1'
+    id 'org.springframework.boot' version '2.3.3.RELEASE'
+    id 'org.owasp.dependencycheck' version '5.3.2.1'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    id 'nebula.override' version '3.0.2'
+}
+
+group = 'com.megaprofer.academic'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+dependencies {
+    runtimeOnly 'org.springframework.boot:spring-boot-devtools'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'commons-io:commons-io:2.6'
+    implementation 'org.modelmapper:modelmapper:2.3.8'
+    compile group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
+    implementation 'net.sf.jasperreports:jasperreports:6.14.0'
+    implementation 'com.lowagie:itext:4.2.2'
+    compileOnly 'org.projectlombok:lombok:1.18.12'
+    runtimeOnly 'org.postgresql:postgresql'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'junit:junit'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.assertj:assertj-core'
+    // https://mvnrepository.com/artifact/com.auth0/java-jwt
+    implementation group: 'com.auth0', name: 'java-jwt', version: '3.10.3'
+
+}
+
+repositories {
+    mavenCentral()
+}
+
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat = 'full'
+    }
+    exclude '**/*'
+
+}
+
+task integrationTest(type: Test) {
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat = 'full'
+    }
+    include '**/com/megaprofer/**/*IntegrationTest*'
+}
+
+sonarqube {
+    properties {
+        property 'sonar.coverage.exclusions', '**/com/megaprofer/AcademicServiceApplication*'
+    }
+}
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            element = 'CLASS'
+            excludes = ['AcademicServiceApplication*']
+            limit {
+                minimum = 0.99
+            }
+            excludes = [
+                    'com.megaprofer.AcademicServiceApplication',
+            ]
+        }
+    }
+}
+
+jacocoTestReport {
+    reports {
+        html.destination file('build/jacocoHtml')
+    }
+
+}
+
+pitest {
+    threads = 2
+    mutationThreshold = 85
+    outputFormats = ['XML', 'HTML']
+    timeoutFactor = 1.25
+//	reportDir = 'build/pitestHtml'
+    timestampedReports = false
+    targetClasses = ['com.megaprofer.academic.*']
+    excludedClasses = ['com.megaprofer.academic.**',]
+    excludedTestClasses = ['*IntegrationTest']
+}
+
+dependencyCheck {
+    outputDirectory = 'build/owaspHtml'
+    failBuildOnCVSS = 5
+    failOnError = true
+}
+
+bootRun {
+    if (project.hasProperty('args')) {
+        args project.args.split(',')
+    }
+}
